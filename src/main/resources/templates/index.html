@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>BusGo - Bus Reservation System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff7b42 0%, #ff9f43 50%, #ffd93d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .form-section, .bus-info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-section:hover, .bus-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .form-section h2, .bus-info h3 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            position: relative;
+        }
+
+        .form-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(45deg, #ff7b42, #ffd93d);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ff7b42;
+            box-shadow: 0 0 0 3px rgba(255, 123, 66, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #ff7b42, #ffd93d);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 154, 86, 0.3);
+            background: linear-gradient(45deg, #ff6b32, #ffcc2d);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .bus-entry {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff7b42;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .bus-entry:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .bus-entry.selected {
+            background: linear-gradient(45deg, #fff8f0, #fffbf5);
+            transform: translateX(10px);
+            border-left-color: #28a745;
+        }
+
+        .bus-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .bus-details {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .seats-left {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Seat Selection */
+        .seat-selection {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .seat-selection.show {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .seat {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .seat:hover {
+            border-color: #ff7b42;
+            transform: scale(1.05);
+        }
+
+        .seat.selected {
+            background: #ff7b42;
+            color: white;
+            border-color: #ff7b42;
+        }
+
+        .seat.booked {
+            background: #dc3545;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Error message */
+        .error-message {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        .notification .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #ff7b42;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-section, .bus-info {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-bus"></i> BusGo</h1>
+        <p>Your trusted travel companion - Book with confidence</p>
+    </div>
+
+    <div class="container">
+        <!-- Left: Passenger Form -->
+        <div class="form-section">
+            <h2><i class="fas fa-user"></i> Passenger Details</h2>
+            <form th:action="@{/book}" th:object="${booking}" method="post" id="bookingForm">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Full Name:</label>
+                    <input type="text" th:field="*{name}" required placeholder="Enter your full name"/>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-venus-mars"></i> Gender:</label>
+                    <select th:field="*{gender}">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email Address:</label>
+                    <input type="email" th:field="*{email}" required placeholder="Enter your email"/>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Journey Date:</label>
+                    <input type="date" th:field="*{journeyDate}" required id="journeyDate" min="" />
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-bus"></i> Select Bus:</label>
+                    <select th:field="*{busName}" id="busSelect" required>
+                        <option value="">Choose a bus...</option>
+                        <option value="GreenLine Express">GreenLine Express</option>
+                        <option value="KSRTC Super Deluxe">KSRTC Super Deluxe</option>
+                        <option value="Night Star Travels">Night Star Travels</option>
+                    </select>
+                </div>
+
+                <!-- Seat Selection -->
+                <div class="seat-selection" id="seatSelection">
+                    <h4><i class="fas fa-chair"></i> Select Your Seat:</h4>
+                    <div class="seat-grid" id="seatGrid">
+                        <!-- Seats will be loaded dynamically -->
+                    </div>
+                    <input type="hidden" th:field="*{seatNumber}" id="selectedSeat" />
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                    <i class="fas fa-ticket-alt"></i> Book My Ticket
+                </button>
+            </form>
+
+            <!-- Error Message -->
+            <div class="error-message" th:if="${error}" th:text="${error}"></div>
+        </div>
+
+        <!-- Right: Bus Info -->
+        <div class="bus-info">
+            <h3><i class="fas fa-info-circle"></i> Available Buses</h3>
+            
+            <div class="bus-entry" data-bus="GreenLine Express">
+                <div class="bus-name">🚌 GreenLine Express</div>
+                <div class="bus-details">
+                    <i class="fas fa-route"></i> <strong>Route:</strong> Chennai → Bangalore<br/>
+                    <i class="fas fa-clock"></i> <strong>Departure:</strong> 09:00 AM<br/>
+                    <i class="fas fa-chair"></i> <span class="seats-left" id="seats-GreenLine Express">Loading...</span>
+                </div>
+            </div>
+
+            <div class="bus-entry" data-bus="KSRTC Super Deluxe">
+                <div class="bus-name">🚌 KSRTC Super Deluxe</div>
+                <div class="bus-details">
+                    <i class="fas fa-route"></i> <strong>Route:</strong> Kochi → Trivandrum<br/>
+                    <i class="fas fa-clock"></i> <strong>Departure:</strong> 07:30 AM<br/>
+                    <i class="fas fa-chair"></i> <span class="seats-left" id="seats-KSRTC Super Deluxe">Loading...</span>
+                </div>
+            </div>
+
+            <div class="bus-entry" data-bus="Night Star Travels">
+                <div class="bus-name">🚌 Night Star Travels</div>
+                <div class="bus-details">
+                    <i class="fas fa-route"></i> <strong>Route:</strong> Hyderabad → Vizag<br/>
+                    <i class="fas fa-clock"></i> <strong>Departure:</strong> 10:00 PM<br/>
+                    <i class="fas fa-chair"></i> <span class="seats-left" id="seats-Night Star Travels">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Success/Error Notification -->
+    <div class="notification" id="notification">
+        <button class="close-btn" onclick="closeNotification()">&times;</button>
+        <div id="notificationContent"></div>
+    </div>
+
+    <!-- Add this script block right after the notification div to handle Thymeleaf messages -->
+    <script th:inline="javascript">
+        // This script block will have access to Thymeleaf variables
+        document.addEventListener('DOMContentLoaded', function() {
+            var successMessage = /*[[${message}]]*/ null;
+            var errorMessage = /*[[${error}]]*/ null;
+            
+            setTimeout(function() {
+                if (successMessage) {
+                    showNotification(successMessage, 'success');
+                } else if (errorMessage) {
+                    showNotification(errorMessage, 'error');
+                }
+            }, 800);
+        });
+    </script>
+
+    <script>
+        let selectedBus = '';
+        let selectedSeat = '';
+        let selectedDate = '';
+
+        // Set minimum date to today
+        document.getElementById('journeyDate').min = new Date().toISOString().split('T')[0];
+
+        // Show notification if message exists - FIXED VERSION
+        window.onload = function() {
+            updateSeatsCount();
+        };
+
+        // Show notification function - ENHANCED VERSION
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notificationContent');
+            
+            if (!message || message.trim() === '') return;
+            
+            const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+            content.innerHTML = `<i class="fas fa-${icon}"></i><strong>${type === 'success' ? 'Success!' : 'Error!'}</strong><br/>${message}`;
+            
+            // Remove any existing classes and add new ones
+            notification.className = `notification ${type}`;
+            
+            // Force reflow and then show
+            notification.offsetHeight;
+            notification.classList.add('show');
+            
+            // Auto hide after 6 seconds
+            setTimeout(() => {
+                closeNotification();
+            }, 6000);
+        }
+
+        // Close notification
+        function closeNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.remove('show');
+        }
+
+        // Update seats count for all buses
+        function updateSeatsCount() {
+            const date = document.getElementById('journeyDate').value || new Date().toISOString().split('T')[0];
+            const buses = ['GreenLine Express', 'KSRTC Super Deluxe', 'Night Star Travels'];
+            
+            buses.forEach(bus => {
+                fetch(`/seats-count?busName=${encodeURIComponent(bus)}&date=${date}`)
+                    .then(response => response.json())
+                    .then(count => {
+                        const seatElement = document.getElementById(`seats-${bus}`);
+                        if (seatElement) {
+                            seatElement.textContent = `${count} Seats Left`;
+                            seatElement.className = 'seats-left';
+                            if (count <= 5) seatElement.style.background = '#dc3545';
+                            else if (count <= 10) seatElement.style.background = '#ffc107';
+                        }
+                    })
+                    .catch(() => {
+                        const seatElement = document.getElementById(`seats-${bus}`);
+                        if (seatElement) {
+                            seatElement.textContent = 'Error loading';
+                        }
+                    });
+            });
+        }
+
+        // Date change handler
+        document.getElementById('journeyDate').addEventListener('change', function() {
+            selectedDate = this.value;
+            updateSeatsCount();
+            if (selectedBus) {
+                loadSeats();
+            }
+        });
+
+        // Bus selection
+        document.getElementById('busSelect').addEventListener('change', function() {
+            selectedBus = this.value;
+            selectedSeat = '';
+            document.getElementById('selectedSeat').value = '';
+            
+            // Update UI
+            document.querySelectorAll('.bus-entry').forEach(entry => {
+                entry.classList.remove('selected');
+            });
+            
+            if (selectedBus) {
+                document.querySelector(`[data-bus="${selectedBus}"]`).classList.add('selected');
+                if (selectedDate) {
+                    loadSeats();
+                }
+            } else {
+                document.getElementById('seatSelection').classList.remove('show');
+            }
+            
+            updateSubmitButton();
+        });
+
+        // Load available seats
+        function loadSeats() {
+            if (!selectedBus || !selectedDate) return;
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            fetch(`/seats?busName=${encodeURIComponent(selectedBus)}&date=${selectedDate}`)
+                .then(response => response.json())
+                .then(seats => {
+                    const seatGrid = document.getElementById('seatGrid');
+                    seatGrid.innerHTML = '';
+                    
+                    if (seats.length === 0) {
+                        seatGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #dc3545; font-weight: bold;">No seats available for this date</div>';
+                    } else {
+                        seats.forEach(seat => {
+                            const seatElement = document.createElement('div');
+                            seatElement.className = 'seat';
+                            seatElement.textContent = seat;
+                            seatElement.onclick = () => selectSeat(seat, seatElement);
+                            seatGrid.appendChild(seatElement);
+                        });
+                    }
+                    
+                    document.getElementById('seatSelection').classList.add('show');
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading seats:', error);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showNotification('Error loading seats. Please try again.', 'error');
+                });
+        }
+
+        // Select seat
+        function selectSeat(seatNumber, element) {
+            // Remove previous selection
+            document.querySelectorAll('.seat.selected').forEach(seat => {
+                seat.classList.remove('selected');
+            });
+            
+            // Select new seat
+            element.classList.add('selected');
+            selectedSeat = seatNumber;
+            document.getElementById('selectedSeat').value = seatNumber;
+            
+            updateSubmitButton();
+        }
+
+        // Update submit button state
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            const canSubmit = selectedBus && selectedSeat && selectedDate;
+            
+            submitBtn.disabled = !canSubmit;
+            if (canSubmit) {
+                submitBtn.innerHTML = `<i class="fas fa-ticket-alt"></i> Book Seat ${selectedSeat}`;
+            } else {
+                submitBtn.innerHTML = '<i class="fas fa-ticket-alt"></i> Book My Ticket';
+            }
+        }
+
+        // Form submission
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            if (!selectedBus || !selectedSeat || !selectedDate) {
+                e.preventDefault();
+                showNotification('Please select bus, date, and seat before booking!', 'error');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Show immediate feedback
+            showNotification('Processing your booking...', 'success');
+        });
+
+        // Bus entry click to select
+        document.querySelectorAll('.bus-entry').forEach(entry => {
+            entry.addEventListener('click', function() {
+                const busName = this.getAttribute('data-bus');
+                document.getElementById('busSelect').value = busName;
+                document.getElementById('busSelect').dispatchEvent(new Event('change'));
+            });
+        });
+
+        // Test notification function (you can call this from browser console to test)
+        function testNotification() {
+            showNotification('This is a test notification!', 'success');
+        }
+    </script>
+</body>
+</html>
