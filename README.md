@@ -1,7 +1,7 @@
 # 🚌 Bus Reservation System
 VIDEO LINK :https://youtu.be/qin89BNUyB8?si=8UjG0uxbtJbQLXc4
 
-A full-stack web application built using  for online bus ticket booking. This project allows users to select buses on predefined routes, enter passenger details, and receive ticket confirmations via email.
+A full-stack web application built using  for online bus ticket booking. This project allows users to select buses on predefined routes, enter passenger details, and receive ticket confirmations via email. 
 
 ---
 
