@@ -44,7 +44,7 @@ A full-stack web application built using  for online bus ticket booking. This pr
 
 - **Backend:** Java, Spring Boot, Spring MVC
 - **Frontend:** Thymeleaf, HTML, CSS
-- **Email Service:** JavaMail + SMTP
+- **Email Service:** JavaMail + SMTP (email)
 - **Build Tool:** Maven
 
 ---
